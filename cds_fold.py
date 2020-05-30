@@ -85,16 +85,16 @@ def build_seq(c_sequence, seqid, start, end, strand):
 def protein_qc(seq, gene_name):
 
     if len(seq) % 3 is not 0:
-        print("Warning! Skipping gene {gene_name}. Protein is not divisible by 3")
+        print(f"Warning! Skipping gene {gene_name}. Protein is not divisible by 3")
         return False
 
     if len(seq) < 3:
-        print("Warning! Skipping gene {gene_name}. DNA sequence is too short.")
+        print(f"Warning! Skipping gene {gene_name}. DNA sequence is too short.")
         return False
 
     protein = translate(seq)
     if len(protein) < 1:
-        print("Warning! Skipping gene {gene_name}. Protein sequence is too short.")
+        print(f"Warning! Skipping gene {gene_name}. Protein sequence is too short.")
         return False
 
     n_stops = protein.count("_")
