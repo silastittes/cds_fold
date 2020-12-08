@@ -82,6 +82,8 @@ def build_seq(c_sequence, seqid, start, end, strand):
         if strand is "+":
             c_seq = fasta_dict[seqid].seq[start-1:end]
             return c_sequence + c_seq
+    else:
+        return ""
 
 #quality check for issues with protein sequence
 def protein_qc(seq, gene_name):
