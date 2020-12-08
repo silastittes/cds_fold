@@ -1,3 +1,4 @@
+import gzip
 from Bio import SeqIO
 import argparse
 
@@ -74,12 +75,13 @@ def n_fold(seq, gene_name):
 
 #quality check for issues with protein sequence
 def build_seq(c_sequence, seqid, start, end, strand):
-    if strand is "-":
-        c_seq = fasta_dict[seqid].seq[start-1:end]
-        return c_seq.reverse_complement() + c_sequence
-    if strand is "+":
-        c_seq = fasta_dict[seqid].seq[start-1:end]
-        return c_sequence + c_seq
+    if seqid in fasta_dict:
+        if strand is "-":
+            c_seq = fasta_dict[seqid].seq[start-1:end]
+            return c_seq.reverse_complement() + c_sequence
+        if strand is "+":
+            c_seq = fasta_dict[seqid].seq[start-1:end]
+            return c_sequence + c_seq
 
 #quality check for issues with protein sequence
 def protein_qc(seq, gene_name):
@@ -134,6 +136,13 @@ fasta_dict = SeqIO.to_dict(SeqIO.parse(args.reference, "fasta"))
 ## PROCESS GFF ##
 #################
 
+
+def openfile(filename):
+    if filename.endswith(".gz"):
+        return gzip.open(filename, "rt")
+    else:
+        return open(filename, "r")
+
 s = 0
 smx = 1
 old_name = ""
@@ -144,7 +153,7 @@ seq_pos = []
 fold_dict = {}
 
 
-with open(args.gff) as gff:
+with openfile(args.gff) as gff:
     for line in gff:
         if line[0] is not "#":
             seqid, source, s_type, start, end, score, strand, phase, attr = line.strip().split('\t')
