@@ -1,3 +1,4 @@
+import gzip
 from Bio import SeqIO
 import argparse
 
@@ -6,6 +7,13 @@ parser = argparse.ArgumentParser(description="Generate list of 0-fold and 4-fold
 parser.add_argument("reference", type=str, help="Fasta formatted reference file")
 
 parser.add_argument("gff", type=str, help="version 3 gff file.")
+
+#start_check = True, complete_check = True)
+parser.add_argument('-c', '--complete_check', action='store_false', default = True,
+                    help='Switch to disable check if the the translated protein has any missing amino acids.')
+
+parser.add_argument('-s', '--start_check', action='store_false', default = True,
+                     help='Switch to disable check if the the translated protein has a start codon.')
 
 parser.add_argument("-o", "--outfile", type=str, help="Name of the output file", required = True)
 
@@ -81,8 +89,9 @@ def build_seq(c_sequence, seqid, start, end, strand):
         c_seq = fasta_dict[seqid].seq[start-1:end]
         return c_sequence + c_seq
 
+
 #quality check for issues with protein sequence
-def protein_qc(seq, gene_name):
+def protein_qc(seq, gene_name, start_check = True, complete_check = True):
 
     if len(seq) % 3 != 0:
 
@@ -106,11 +115,12 @@ def protein_qc(seq, gene_name):
         print(f"Warning! Skipping gene: {gene_name}. Incorrect number and/or location of stop codons.")
         return False
 
-    if start_aa != "M":
+    if start_aa != "M" and start_check:
+
         print(f"Warning! Skipping gene: {gene_name}. Does not start with M")
         return False
 
-    if "-" in protein:
+    if "-" in protein and complete_check:
         print(f"Warning! Skipping gene: {gene_name}. Contains a non-amino acid three base pair condon")
         return False
     return True
@@ -135,6 +145,13 @@ fasta_dict = SeqIO.to_dict(SeqIO.parse(args.reference, "fasta"))
 ## PROCESS GFF ##
 #################
 
+
+def openfile(filename):
+    if filename.endswith(".gz"):
+        return gzip.open(filename, "rt")
+    else:
+        return open(filename, "r")
+
 s = 0
 smx = 1
 old_name = ""
@@ -145,7 +162,7 @@ seq_pos = []
 fold_dict = {}
 
 
-with open(args.gff) as gff:
+with openfile(args.gff) as gff:
     for line in gff:
         if line[0] != "#":
             seqid, source, s_type, start, end, score, strand, phase, attr = line.strip().split('\t')
@@ -161,7 +178,7 @@ with open(args.gff) as gff:
                     seq_pos += list(range(start, end+1))
                 else:
                     gene_folds = n_fold(c_sequence, old_name)
-                    prot_qc = protein_qc(c_sequence, old_name)
+                    prot_qc = protein_qc(c_sequence, old_name, start_check = args.start_check, complete_check = args.complete_check)
                     if prot_qc:
                         if gene_folds:
                             n_folds = len(gene_folds)
