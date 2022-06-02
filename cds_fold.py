@@ -26,11 +26,11 @@ args = parser.parse_args()
 def translate(seq):    
     seq = seq.upper()
     
-    if len(seq) % 3 is not 0: 
+    if len(seq) % 3 != 0: 
         raise ValueError('input sequence not divisible by 3')
         
     if False in [s in ["A", "T", "G", "C", "N"] for s in seq]:
-        raise ValueError(f'{seq} contains at least one non nucleotide or N character')
+        print(f'found non nucleotide in codon {seq}.')
         
     table = { 
         'ATA':'I', 'ATC':'I', 'ATT':'I', 'ATG':'M', 
@@ -55,7 +55,7 @@ def translate(seq):
     for i in range(0, len(seq), 3): 
         codon = seq[i:i + 3]
         try:
-            protein += table[codon]
+            protein += table.get(codon, "_")
         except:
             protein += "-"
     return protein
@@ -63,7 +63,7 @@ def translate(seq):
    
 #check all mutations at each position to determine fold
 def condon(seq, pos):
-    if len(seq) is not 3: 
+    if len(seq) != 3: 
         raise ValueError('input sequence should be 3 bps')
     if pos not in [1,2,3]:
         raise ValueError('pos argument must be 1, 2, or 3')
@@ -74,7 +74,7 @@ def condon(seq, pos):
     
 #count potential number unique amino acids present at a locus
 def n_fold(seq, gene_name):
-    if len(seq) % 3 is not 0:
+    if len(seq) % 3 != 0:
         print(f"skipping gene: {gene_name}. input sequence not divisible by 3")
         return None
     else:
@@ -82,20 +82,19 @@ def n_fold(seq, gene_name):
 
 #quality check for issues with protein sequence
 def build_seq(c_sequence, seqid, start, end, strand):
-    if seqid in fasta_dict:
-        if strand is "-":
-            c_seq = fasta_dict[seqid].seq[start-1:end]
-            return c_seq.reverse_complement() + c_sequence
-        if strand is "+":
-            c_seq = fasta_dict[seqid].seq[start-1:end]
-            return c_sequence + c_seq
-    else:
-        return ""
+    if strand == "-":
+        c_seq = fasta_dict[seqid].seq[start-1:end]
+        return c_seq.reverse_complement() + c_sequence
+    if strand == "+":
+        c_seq = fasta_dict[seqid].seq[start-1:end]
+        return c_sequence + c_seq
+
 
 #quality check for issues with protein sequence
 def protein_qc(seq, gene_name, start_check = True, complete_check = True):
 
-    if len(seq) % 3 is not 0:
+    if len(seq) % 3 != 0:
+
         print(f"Warning! Skipping gene {gene_name}. Protein is not divisible by 3")
         return False
 
@@ -112,11 +111,12 @@ def protein_qc(seq, gene_name, start_check = True, complete_check = True):
     start_aa = protein[0]
     last_aa = protein[-1]
 
-    if n_stops is not 1 or last_aa is not "_":
+    if n_stops != 1 or last_aa != "_":
         print(f"Warning! Skipping gene: {gene_name}. Incorrect number and/or location of stop codons.")
         return False
 
-    if start_aa is not "M" and start_check:
+    if start_aa != "M" and start_check:
+
         print(f"Warning! Skipping gene: {gene_name}. Does not start with M")
         return False
 
@@ -164,7 +164,7 @@ fold_dict = {}
 
 with openfile(args.gff) as gff:
     for line in gff:
-        if line[0] is not "#":
+        if line[0] != "#":
             seqid, source, s_type, start, end, score, strand, phase, attr = line.strip().split('\t')
             start = int(start)
             end = int(end)
