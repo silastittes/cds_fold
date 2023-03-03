@@ -1,4 +1,7 @@
 # cds_fold
+
+NOTE: Please consider using [degenotate](https://github.com/harvardinformatics/degenotate) instead. 
+
 Outputs the 0-fold and 4-fold sites from a gff and reference genome.
 
 NOTE: Assumes there is one mutation per codon.
